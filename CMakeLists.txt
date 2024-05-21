@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(edu_drive_ros2)
+project(bento_drive)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -15,7 +15,7 @@ find_package(std_srvs REQUIRED)
 
 add_executable(${PROJECT_NAME}_node src/edu_drive_node.cpp src/EduDrive.cpp src/MotorController.cpp src/RPiAdapterBoard.cpp src/PowerManagementBoard.cpp src/can/canprotocol.cpp src/can/SocketCAN.cpp src/can/SocketCANObserver.cpp)
 
-ament_target_dependencies(edu_drive_ros2_node sensor_msgs std_srvs rclcpp)
+ament_target_dependencies(bento_drive_node sensor_msgs std_srvs rclcpp)
 
 install(
   DIRECTORY
@@ -25,7 +25,7 @@ install(
 )
 
 install(TARGETS
-  edu_drive_ros2_node
+  bento_drive_node
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
