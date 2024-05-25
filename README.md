@@ -44,6 +44,7 @@ Please notice also, that the ROS variable ROS_DOMAIN_ID should be set properly.
 | encoderRatio   | Encoder pulses per motor revolution (rising and falling edge evaluation) |
 | rpmMax         | Maximum revolutions per minute of geared motor pinion |
 | channel        | Used channel of motor controller. There are single-channel motorshields and dual-channel motorshields. Meaningful values are 0 or 1. |
+| doKinematics   | Used for disabling kinematics on a motor. Use in combination with setRPM topic for manual motor control. |
 | kinematics     | Three-dimensional vector describing the conversion from Twist messages in motor revolutions. See explanation below. |
 
 ## Calculation of the kinematic parameters

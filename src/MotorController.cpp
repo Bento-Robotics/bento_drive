@@ -447,6 +447,11 @@ float MotorController::getInputWeight()
   return _params.inputWeight;
 }
 
+bool MotorController::getDoKinematics()
+{
+  return _params.doKinematics;
+}
+
 void MotorController::notify(struct can_frame* frame)
 {
   if(frame->can_dlc==6)

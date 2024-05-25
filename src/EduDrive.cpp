@@ -41,6 +41,7 @@ namespace edu
         
         _subJoy     = this->create_subscription<sensor_msgs::msg::Joy>("joy", 1, std::bind(&EduDrive::joyCallback, this, std::placeholders::_1));
         _subVel     = this->create_subscription<geometry_msgs::msg::Twist>("vel/teleop", 10, std::bind(&EduDrive::velocityCallback, this, std::placeholders::_1));
+        _subRPM     = this->create_subscription<std_msgs::msg::Float32MultiArray>("rpmOverride", 1, std::bind(&EduDrive::rpmCallback, this, std::placeholders::_1));
         _srvEnable  = this->create_service<std_srvs::srv::SetBool>("enable", std::bind(&EduDrive::enableCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
         // Publisher of motor shields
@@ -195,6 +196,36 @@ namespace edu
         controlMotors(cmd->linear.x, cmd->linear.y, cmd->angular.z);
     }
 
+    void EduDrive::rpmCallback(const std_msgs::msg::Float32MultiArray::SharedPtr rpm)
+    {
+       _lastCmd = this->get_clock()->now();
+
+	    // make sure data is correct ( 2 array dimensions (controllers and motors), 2 Motors per controller )
+	    if (rpm->layout.dim.size() != 2 || rpm->layout.dim[1].size != 2)
+	    {
+             RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive RPM override data malformed. Ignoring data");
+             return;
+		 }
+
+		 if (rpm->layout.dim[0].size != _mc.size())
+		 {
+             RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive RPM override data length mismatches motor controller count. Ignoring data");
+	          return;
+       }
+
+	    for (unsigned int i = 0; i < _mc.size(); i++)
+		 {
+			 float rpmVals[2];
+
+			 for (unsigned int j = 0; j < 2; j++)
+	          rpmVals[j] = rpm->data[rpm->layout.data_offset + rpm->layout.dim[1].stride * i + j];
+
+          _mc[i]->setRPM(rpmVals);
+          if (_verbosity)
+             RCLCPP_INFO_STREAM(this->get_logger(), "#EduDrive Setting RPM for drive" << i << " to " << rpmVals[0] << " " << rpmVals[1]);
+	    }
+    }
+
     bool EduDrive::enableCallback(const std::shared_ptr<rmw_request_id_t> header, const std::shared_ptr<std_srvs::srv::SetBool_Request> request, const std::shared_ptr<std_srvs::srv::SetBool_Response> response)
     {
         // suppress warning about unused variable header
@@ -220,6 +251,9 @@ namespace edu
             
         for (unsigned int i = 0; i < _mc.size(); ++i)
         {
+            // skip kinematics if they are disabled
+            if (_mc[i]->getDoKinematics() == false) continue;
+
             std::vector<double> kinematics0 = _mc[i]->getMotorParams()[0].kinematics;
             std::vector<double> kinematics1 = _mc[i]->getMotorParams()[1].kinematics;
             float w[2];
