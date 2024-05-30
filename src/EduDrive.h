@@ -100,7 +100,11 @@ private:
     // Data available from motor controllers
     rclcpp::Publisher<std_msgs::msg::ByteMultiArray>::SharedPtr      _pubEnabled;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr   _pubRPM;
-    
+
+    // Maximum speeds
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr          _pubMaxVelocity;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr   _pubMaxRPMs;
+
     // Data available from adapter board
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr             _pubTemp;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr             _pubVoltageAdapter;

@@ -47,6 +47,10 @@ namespace edu
         _pubEnabled = this->create_publisher<std_msgs::msg::ByteMultiArray>("enabled", 1);
         _pubRPM     = this->create_publisher<std_msgs::msg::Float32MultiArray>("rpm", 1);
 
+        // Publisher of maximum values
+        _pubMaxVelocity  = this->create_publisher<geometry_msgs::msg::Twist>("maximums/velocities", 1);
+        _pubMaxRPMs      = this->create_publisher<std_msgs::msg::Float32MultiArray>("maximums/rpms", 1);
+
         // Publisher of carrier shield
         _pubTemp             = this->create_publisher<std_msgs::msg::Float32>("temperature", 1);
         _pubVoltageAdapter   = this->create_publisher<std_msgs::msg::Float32>("voltageAdapter", 1);
@@ -297,6 +301,29 @@ namespace edu
 
         _pubRPM->publish(msgRPM);
         _pubEnabled->publish(msgEnabled);
+
+        geometry_msgs::msg::Twist msgMaxVelocities;
+        msgMaxVelocities.linear.x = _vMax;
+        msgMaxVelocities.angular.x = _omegaMax;
+        _pubMaxVelocity->publish(msgMaxVelocities);
+
+        std_msgs::msg::Float32MultiArray msgMaxRPMs;
+        msgMaxRPMs.layout.data_offset = 0;
+        std_msgs::msg::MultiArrayDimension dim1;
+        dim1.label = "controllers";
+        dim1.size = _mc.size();
+        dim1.stride = _mc.size();
+        msgMaxRPMs.layout.dim.push_back(dim1);
+        std_msgs::msg::MultiArrayDimension dim2;
+	dim2.label = "motors";
+	dim2.size = 1;
+	dim2.stride = 2;
+        msgMaxRPMs.layout.dim.push_back(dim2);
+        for ( auto &mc : _mc ) {
+           msgMaxRPMs.data.push_back(mc->getRPMMax());
+           msgMaxRPMs.data.push_back(0.f);
+        }
+        _pubMaxRPMs->publish(msgMaxRPMs);
 
         std_msgs::msg::Float32 msgTemperature;
         msgTemperature.data = _adapter->getTemperature();
