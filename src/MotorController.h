@@ -63,6 +63,7 @@ namespace edu
     float gearRatio;
     float encoderRatio;
     float rpmMax;
+    bool doKinematics;
 
     std::vector<MotorParams> motorParams;
 
@@ -85,6 +86,7 @@ namespace edu
       antiWindup = 1;
       invertEnc = 0;
       responseMode = CAN_RESPONSE_RPM;
+      doKinematics = true;
 
       motorParams.resize(2);
       std::vector<double> zeroKinematic{0.f, 0.f, 0.f};
@@ -361,6 +363,12 @@ namespace edu
      * @return weight of input filter
      */
     float getInputWeight();
+
+    /**
+     * Accessor to kinematics calculations toggle state
+     * @return kinematics calculations activation
+     */
+     bool getDoKinematics();
 
     /**
      * Stop motors

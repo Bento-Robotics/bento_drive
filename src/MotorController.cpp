@@ -32,6 +32,7 @@ MotorController::MotorController(SocketCAN* can, ControllerParams params, bool v
     std::cout << "    encoderRatio   = " << params.encoderRatio << std::endl;
     std::cout << "    rpmMax         = " << params.rpmMax << std::endl;
     std::cout << "    invertEnc      = " << params.invertEnc << std::endl;
+    std::cout << "    doKinematics   = " << params.doKinematics << std::endl;
 
     for(unsigned int i=0; i<2; i++)
     {
@@ -445,6 +446,11 @@ bool MotorController::setInputWeight(float weight)
 float MotorController::getInputWeight()
 {
   return _params.inputWeight;
+}
+
+bool MotorController::getDoKinematics()
+{
+  return _params.doKinematics;
 }
 
 void MotorController::notify(struct can_frame* frame)

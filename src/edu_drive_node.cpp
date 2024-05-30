@@ -82,12 +82,14 @@ int main(int argc, char *argv[])
       edu_drive->declare_parameter(controllerID + std::string(".encoderRatio"), 0.f);
       edu_drive->declare_parameter(controllerID + std::string(".rpmMax"), 0.f);
       edu_drive->declare_parameter(controllerID + std::string(".invertEnc"), 0);
+      edu_drive->declare_parameter(controllerID + std::string(".doKinematics"), true);
 
       cp.canID        = edu_drive->get_parameter(controllerID + std::string(".canID")).as_int();
       cp.gearRatio    = edu_drive->get_parameter(controllerID + std::string(".gearRatio")).as_double();
       cp.encoderRatio = edu_drive->get_parameter(controllerID + std::string(".encoderRatio")).as_double();
       cp.rpmMax       = edu_drive->get_parameter(controllerID + std::string(".rpmMax")).as_double();
       cp.invertEnc    = edu_drive->get_parameter(controllerID + std::string(".invertEnc")).as_int();
+      cp.doKinematics = edu_drive->get_parameter(controllerID + std::string(".doKinematics")).as_bool();
 
       cp.responseMode   = (responseMode==0 ? edu::CAN_RESPONSE_RPM : edu::CAN_RESPONSE_POS);
 

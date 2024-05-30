@@ -76,6 +76,12 @@ public:
     void velocityCallback(const geometry_msgs::msg::Twist::SharedPtr cmd);
 
     /**
+     * @brief Method called by ROS as rpm data is available
+     */
+    void rpmCallback(const std_msgs::msg::Float32MultiArray::SharedPtr rpm);
+
+
+    /**
      * @brief 
      */
     void receiveCAN();
@@ -95,6 +101,7 @@ private:
     // Input topics / services
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr           _subJoy;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr       _subVel;
+    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr _subRPM;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr               _srvEnable;
 
     // Data available from motor controllers
