@@ -67,15 +67,6 @@ int main(int argc, char *argv[])
    {
       edu::ControllerParams cp;
 
-      cp.frequencyScale = frequencyScale;
-      cp.inputWeight    = inputWeight;
-      cp.maxPulseWidth  = maxPulseWidth;
-      cp.timeout        = timeout;
-      cp.kp             = kp;
-      cp.ki             = ki;
-      cp.kd             = kd;
-      cp.antiWindup     = antiWindup;
-      
       std::string controllerID = std::string("controller") + std::to_string(c);
       edu_drive->declare_parameter(controllerID + std::string(".canID"), 0);
       edu_drive->declare_parameter(controllerID + std::string(".gearRatio"), 0.f);
@@ -83,6 +74,14 @@ int main(int argc, char *argv[])
       edu_drive->declare_parameter(controllerID + std::string(".rpmMax"), 0.f);
       edu_drive->declare_parameter(controllerID + std::string(".invertEnc"), 0);
       edu_drive->declare_parameter(controllerID + std::string(".doKinematics"), true);
+      edu_drive->declare_parameter(controllerID + std::string(".frequencyScale"), frequencyScale);
+      edu_drive->declare_parameter(controllerID + std::string(".inputWeight"), inputWeight);
+      edu_drive->declare_parameter(controllerID + std::string(".maxPulseWidth"), maxPulseWidth);
+      edu_drive->declare_parameter(controllerID + std::string(".timeout"), timeout);
+      edu_drive->declare_parameter(controllerID + std::string(".kp"), kp);
+      edu_drive->declare_parameter(controllerID + std::string(".ki"), ki);
+      edu_drive->declare_parameter(controllerID + std::string(".kd"), kd);
+      edu_drive->declare_parameter(controllerID + std::string(".antiWindup"), antiWindup);
 
       cp.canID        = edu_drive->get_parameter(controllerID + std::string(".canID")).as_int();
       cp.gearRatio    = edu_drive->get_parameter(controllerID + std::string(".gearRatio")).as_double();
@@ -90,6 +89,14 @@ int main(int argc, char *argv[])
       cp.rpmMax       = edu_drive->get_parameter(controllerID + std::string(".rpmMax")).as_double();
       cp.invertEnc    = edu_drive->get_parameter(controllerID + std::string(".invertEnc")).as_int();
       cp.doKinematics = edu_drive->get_parameter(controllerID + std::string(".doKinematics")).as_bool();
+      cp.frequencyScale=edu_drive->get_parameter(controllerID + std::string(".frequencyScale")).as_int();
+      cp.inputWeight  = edu_drive->get_parameter(controllerID + std::string(".inputWeight")).as_double();
+      cp.maxPulseWidth= edu_drive->get_parameter(controllerID + std::string(".maxPulseWidth")).as_int();
+      cp.timeout      = edu_drive->get_parameter(controllerID + std::string(".timeout")).as_int();
+      cp.kp           = edu_drive->get_parameter(controllerID + std::string(".kp")).as_double();
+      cp.ki           = edu_drive->get_parameter(controllerID + std::string(".ki")).as_double();
+      cp.kd           = edu_drive->get_parameter(controllerID + std::string(".kd")).as_double();
+      cp.antiWindup   = edu_drive->get_parameter(controllerID + std::string(".antiWindup")).as_int();
 
       cp.responseMode   = (responseMode==0 ? edu::CAN_RESPONSE_RPM : edu::CAN_RESPONSE_POS);
 
