@@ -365,6 +365,11 @@ bool MotorController::setRPM(float rpm[2])
   return _can->send(&_cf);
 }
 
+float MotorController::getRPMMax()
+{
+  return _params.rpmMax;
+}
+
 void MotorController::getWheelResponse(float response[2])
 {
   if(_params.responseMode == CAN_RESPONSE_RPM)

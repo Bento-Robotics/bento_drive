@@ -295,6 +295,12 @@ namespace edu
     bool setRPM(float rpm[2]);
 
     /**
+     * Accessor to maximum RPM
+     * @return maximum RPM
+     */
+    float getRPMMax();
+
+    /**
      * Get either motor revolutions per minute or motor position (encoder ticks). This depends on the configuration canResponseMode.
      * @param[out] response revolutions per minute for motor 1 and 2 / position of motor 1 and 2. This is a modulo 2^15 value.
      */
