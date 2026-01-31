@@ -9,6 +9,7 @@
 #include <mutex>
 
 #include "SocketCANObserver.h"
+#include <rclcpp/logger.hpp>
 
 namespace edu
 {
@@ -25,8 +26,9 @@ public:
   /**
    * Constructor
    * @param[in] devFile device file link to CAN interface
+   * @param[in] logger ros2 node logger for error messages
    */
-  SocketCAN(std::string devFile);
+  SocketCAN(std::string devFile, std::shared_ptr<rclcpp::Logger> logger);
 
   /**
    * Destructor
@@ -84,6 +86,8 @@ private:
   bool _listenerIsRunning;
 
   bool _shutDownListener;
+
+  std::shared_ptr<rclcpp::Logger> _logger;
 
   std::vector<SocketCANObserver*> _observers;
 

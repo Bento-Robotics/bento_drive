@@ -5,16 +5,19 @@
 #include <iomanip>
 #include <unistd.h>
 #include "can/canprotocol.h"
+#include <rclcpp/logging.hpp>
+#include <utility>
 
 namespace edu
 {
 
-MotorController::MotorController(SocketCAN* can, ControllerParams params, bool verbosity) : _params(params), _verbosity(verbosity)
+MotorController::MotorController(SocketCAN* can, ControllerParams params, std::shared_ptr<rclcpp::Logger> logger, bool verbosity) : _params(params), _verbosity(verbosity)
 {
   _isInit    = false;
   
   if(true)
   {
+    this->_logger = std::move(logger);
     std::cout << "---------------------------" << std::endl << std::endl;
     std::cout << "frequencyScale = " << params.frequencyScale << std::endl;
     std::cout << "inputWeight    = " << params.inputWeight << std::endl;
@@ -51,7 +54,7 @@ MotorController::MotorController(SocketCAN* can, ControllerParams params, bool v
   makeCanStdID(SYSID_MC2, params.canID, &_inputAddress, &_outputAddress, &_broadcastAddress);
   _cf.can_id = _inputAddress;
   if(verbosity)
-    std::cout << "#MotorController CAN Input ID: " << _inputAddress << " CAN Output ID: " << _outputAddress << std::endl;
+    RCLCPP_INFO_STREAM(*_logger, "#MotorController CAN Input ID: " << _inputAddress << " CAN Output ID: " << _outputAddress);
 
   canid_t canidOutput = _outputAddress;
 
@@ -82,79 +85,79 @@ void MotorController::init()
   
   if(!disable())
   {
-    std::cout << "#MotorController Failed to disable device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger, "#MotorController Failed to disable motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setFrequencyScale(_params.frequencyScale))
   {
-    std::cout << "#MotorController Setting frequency scaling parameter failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting frequency scaling parameter failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setInputWeight(_params.inputWeight))
   {
-    std::cout << "#MotorController Setting differential factor of PID controller failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting differential factor of PID controller failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setMaxPulseWidth(_params.maxPulseWidth))
   {
-    std::cout << "#MotorController Setting maximum pulse width failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting maximum pulse width failed for motorcontroller " << _params.canID);
     retval = false;
   }
 
   if(!setTimeout(_params.timeout))
   {
-    std::cout << "#MotorController Setting timeout failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting timeout failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setGearRatio(_params.gearRatio))
   {
-    std::cout << "#MotorController Setting gear ratio failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting gear ratio failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setEncoderTicksPerRev(_params.encoderRatio))
   {
-    std::cout << "#MotorController Setting encoder parameters failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting encoder parameters failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setKp(_params.kp))
   {
-    std::cout << "#MotorController Setting proportional factor of PID controller failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting proportional factor of PID controller failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setKi(_params.ki))
   {
-    std::cout << "#MotorController Setting integration factor of PID controller failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting integration factor of PID controller failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setKd(_params.kd))
   {
-    std::cout << "#MotorController Setting differential factor of PID controller failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting differential factor of PID controller failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!setAntiWindup(_params.antiWindup))
   {
-    std::cout << "#MotorController Setting differential factor of PID controller failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting differential factor of PID controller failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!configureResponse(_params.responseMode))
   {
-    std::cout << "#MotorController Setting response mode failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting response mode failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
   if(!invertEncoderPolarity(_params.invertEnc))
   {
-    std::cout << "#MotorController Setting encoder polarity failed for device " << _params.canID << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController Setting encoder polarity failed for motorcontroller " << _params.canID);
     retval = false;
   }
   
@@ -166,8 +169,7 @@ void MotorController::init()
   }
   else
   {
-    std::cout << "#MotorController ERROR initializing motor controller with ID " << _params.canID << std::endl;
-    std::cout << "-----------------------------------------------";
+    RCLCPP_ERROR_STREAM(*_logger,  "#MotorController ERROR initializing motor controller with ID " << _params.canID);
   }
 }
 
@@ -178,7 +180,7 @@ void MotorController::deinit()
 
 void MotorController::reinit()
 {
-  std::cout << "#MotorController Reinitializing device " << _params.canID << std::endl;
+  RCLCPP_INFO_STREAM(*_logger, "#MotorController Reinitializing motorcontroller " << _params.canID);
   init();
 }
 

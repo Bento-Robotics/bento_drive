@@ -1,24 +1,27 @@
 #include "SocketCAN.h"
 
 #include <fcntl.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
 #include <iostream>
-#include <unistd.h>
+#include <net/if.h>
+#include <rclcpp/logging.hpp>
+#include <utility>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 namespace edu
 {
 
-SocketCAN::SocketCAN(std::string devFile)
+SocketCAN::SocketCAN(std::string devFile, std::shared_ptr<rclcpp::Logger> logger)
 {
   _soc = 0;
   _listenerIsRunning = false;
   _shutDownListener  = false;
+  _logger = std::move(logger);
 
   if(!openPort(devFile.c_str()))
-    std::cout << "WARNING: Cannot open CAN device interface: " << devFile << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger, "WARNING: Cannot open CAN device interface: " << devFile);
 }
 
 SocketCAN::~SocketCAN()
@@ -90,7 +93,7 @@ bool SocketCAN::send(struct can_frame* frame)
   _mutex.unlock();
   if (retval != sizeof(struct can_frame))
   {
-    std::cout << "Can transmission error for command " << (int)(frame->data[0]) << ", returned " << retval << " submitted bytes instead of " << sizeof(struct can_frame) << std::endl;
+    RCLCPP_ERROR_STREAM(*_logger, "Can transmission error for command " << (int)(frame->data[0]) << ", returned " << retval << " submitted bytes instead of " << sizeof(can_frame));
     return false;
   }
   else

@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
    }
    // -------------------------
 
-   edu::SocketCAN can(canInterface);
+   edu::SocketCAN can(canInterface, std::make_shared<rclcpp::Logger>(edu_drive->get_logger()));
    can.startListener();
    
    RCLCPP_INFO_STREAM(edu_drive->get_logger(), "CAN Interface: " << canInterface);

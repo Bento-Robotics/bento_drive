@@ -22,9 +22,9 @@ namespace edu
 
     EduDrive::~EduDrive()
     {
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
+        for (const MotorController * it : _mc)
         {
-            delete *it;
+            delete it;
         }
         delete _pwr_mgmt;
         delete _adapter;
@@ -38,7 +38,7 @@ namespace edu
         _using_pwr_mgmt = using_pwr_mgmt;
         _verbosity = verbosity;
         _enabled = false;
-        
+
         _subJoy     = this->create_subscription<sensor_msgs::msg::Joy>("joy", 1, std::bind(&EduDrive::joyCallback, this, std::placeholders::_1));
         _subVel     = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&EduDrive::velocityCallback, this, std::placeholders::_1));
         _subRPM     = this->create_subscription<std_msgs::msg::Float32MultiArray>("rpmOverride", 1, std::bind(&EduDrive::rpmCallback, this, std::placeholders::_1));
@@ -57,38 +57,37 @@ namespace edu
         _pubVoltageAdapter   = this->create_publisher<std_msgs::msg::Float32>("voltageAdapter", 1);
         _pubOrientation      = this->create_publisher<geometry_msgs::msg::PoseStamped>("pose", 1);
         _pubAccel            = this->create_publisher<geometry_msgs::msg::AccelStamped>("accel", 1);
-		
+
         //Publisher of power management shield
         _pubVoltagePwrMgmt = this->create_publisher<std_msgs::msg::Float32>("voltagePwrMgmt", 1);
         _pubCurrentPwrMgmt = this->create_publisher<std_msgs::msg::Float32>("currentPwrMgmt", 1);
 
         _adapter = new RPiAdapterBoard(&can, verbosity);
         _pwr_mgmt = new PowerManagementBoard(&can, verbosity);
-        
+
         _vMax = 0.f;
 
         bool isKinematicsValid = true;
-        for (unsigned int i = 0; i < cp.size(); ++i)
+        for (const ControllerParams& i : cp)
         {
-            std::vector<MotorParams> motorParams = cp[i].motorParams;
+            std::vector<MotorParams> motorParams = i.motorParams;
 
-            for (unsigned int j = 0; j < motorParams.size(); ++j)
+            for (const MotorParams& motorParam : motorParams)
             {
-                isKinematicsValid &= (motorParams[j].kinematics.size()==3);
+                isKinematicsValid &= (motorParam.kinematics.size()==3);
 				}
         }
         if(!isKinematicsValid)
         {
-            //std::cout << "#EduDrive Kinematic vectors does not fit to drive concept. Vectors of lenght==3 are expected." << std::endl;
             RCLCPP_INFO_STREAM(this->get_logger(), "#EduDrive Kinematic vectors does not fit to drive concept. Vectors of lenght==3 are expected.");
 
             exit(1);
         }
-        
+
         for (unsigned int i = 0; i < cp.size(); ++i)
         {
-            _mc.push_back(new MotorController(&can, cp[i], verbosity));
-            
+            _mc.push_back(new MotorController(&can, cp[i], std::make_shared<rclcpp::Logger>(this->get_logger()), verbosity));
+
             for(unsigned int j=0; j<_mc[i]->getMotorParams().size(); j++)
             {
             	std::vector<double> kinematics = _mc[i]->getMotorParams()[j].kinematics;
@@ -120,10 +119,10 @@ namespace edu
         rclcpp::spin(shared_from_this());
 
         _can->clearObservers();
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
+        for (MotorController* it : _mc)
         {
-            (*it)->stop();
-            (*it)->disable();
+            it->stop();
+            it->disable();
         }
 
         rclcpp::shutdown();
@@ -140,11 +139,11 @@ namespace edu
             _pwr_mgmt->enable();
         }
 
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
+        for (MotorController* it : _mc)
         {
-            if(!(*it)->isInitialized())
-                (*it)->reinit();
-            (*it)->enable();
+            if(!it->isInitialized())
+                it->reinit();
+            it->enable();
         }
     }
 
@@ -157,8 +156,8 @@ namespace edu
             _pwr_mgmt->disable();
         }
 
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
-            (*it)->disable();
+        for (MotorController* it : _mc)
+            it->disable();
     }
 
     void EduDrive::joyCallback(const sensor_msgs::msg::Joy::SharedPtr joy)
@@ -268,7 +267,7 @@ namespace edu
     void EduDrive::controlMotors(float vFwd, float vLeft, float omega)
     {
         _lastCmd = this->get_clock()->now();
-            
+
         for (unsigned int i = 0; i < _mc.size(); ++i)
         {
             // do nothing if kinematics are disabled
@@ -286,7 +285,6 @@ namespace edu
 
             _mc[i]->setRPM(w);
             if (_verbosity)
-                //std::cout << "#EduDrive Setting RPM for drive" << i << " to " << w[0] << " " << w[1] << std::endl;
                 RCLCPP_INFO_STREAM(this->get_logger(), "#EduDrive Setting RPM for drive" << i << " to " << w[0] << " " << w[1]);
         }
     }
@@ -295,41 +293,39 @@ namespace edu
     {
         float voltageAdapter = _adapter->getVoltageSys();
         float voltagePwrMgmt = _pwr_mgmt->getVoltage();
-        
+
         std_msgs::msg::Float32MultiArray msgRPM;
         std_msgs::msg::ByteMultiArray msgEnabled;
 
         bool controllersInitialized = true;
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
-        {        
-	        controllersInitialized = controllersInitialized && (*it)->isInitialized();
+        for (MotorController* it : _mc)
+        {
+	        controllersInitialized = controllersInitialized && it->isInitialized();
 	     }
-        
-        for (std::vector<MotorController *>::iterator it = std::begin(_mc); it != std::end(_mc); ++it)
+
+        for (MotorController* it : _mc)
         {
             float response[2] = {0, 0};
             bool enableState = false;
             if(controllersInitialized)
             {
                 if(voltageAdapter > 3.0 || voltagePwrMgmt > 3.0) //@ToDo: find nicer solution
-                {                    
-                    if((*it)->checkConnectionStatus(200))
+                {
+                    if(it->checkConnectionStatus(200))
                     {
-                        (*it)->getWheelResponse(response);
-                        enableState = (*it)->getEnableState();
+                        it->getWheelResponse(response);
+                        enableState = it->getEnableState();
                     }
                     else
                     {
-                        //std::cout << "#EduDrive Error synchronizing with device" << (*it)->getCanId() << std::endl;
-                        RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive Error synchronizing with device" << (*it)->getCanId());   
+                        RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive Error synchronizing with device" << it->getCanId());
                     }
                 }
                 else
                 {
-                    //std::cout << "#EduDrive Low voltage on drive power supply rail for device " << (*it)->getCanId() << std::endl;
-                    RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive Low voltage on drive power supply rail for device " << (*it)->getCanId());
-                    
-                    (*it)->deinit();
+                    RCLCPP_WARN_STREAM(this->get_logger(), "#EduDrive Low voltage on drive power supply rail for device " << it->getCanId());
+
+                    it->deinit();
                     disable();
                 }
             }
@@ -337,7 +333,7 @@ namespace edu
             msgRPM.data.push_back(response[1]);
             msgEnabled.data.push_back(enableState);
         }
-        
+
         rclcpp::Time stampReceived = this->get_clock()->now();
 
         _enabled = false;
@@ -436,7 +432,7 @@ namespace edu
         struct gpiohandle_request rq;
         struct gpiohandle_data data;
         int fd, ret;
-        
+
         fd = open(dev_name, O_RDONLY);
         if (fd < 0)
         {
@@ -501,7 +497,7 @@ namespace edu
 
         close(rq.fd);
         value = data.values[0];
-        return 1;    
+        return 1;
     }
 
 } // namespace

@@ -2,6 +2,9 @@
 #define _MOTORCONTROLLERCAN_H_
 
 #include "can/SocketCAN.h"
+#include <rclcpp/logger.hpp>
+#include <rclcpp/node.hpp>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <vector>
 
 namespace edu
@@ -133,9 +136,10 @@ namespace edu
      * Constructor
      * @param[in] can SocketCAN instance
      * @param[in] params controller parameters
+     * @param[in logger ros2 node logger
      * @param[in] verbosity verbosity output flag
      */
-    MotorController(SocketCAN *can, ControllerParams params, bool verbosity = 0);
+    MotorController(SocketCAN *can, ControllerParams params, std::shared_ptr<rclcpp::Logger> logger, bool verbosity = 0);
 
     /**
      * Destructor
@@ -397,6 +401,8 @@ namespace edu
      * @param[in] frame CAN frame
      */
     void notify(struct can_frame *frame);
+
+    std::shared_ptr<rclcpp::Logger> _logger;
 
     SocketCAN *_can;
 
