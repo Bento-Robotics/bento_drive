@@ -198,10 +198,10 @@ namespace edu
     {
         float vel_length = pow(cmd->linear.x / _vMax, 2) + pow(cmd->linear.y / _vMax, 2) + pow(cmd->angular.z / _omegaMax, 2);
         if (vel_length  <= 1 ) {
-          RCLCPP_WARN_STREAM(this->get_logger(), "Cmd_vel seems legit");
+          //RCLCPP_WARN_STREAM(this->get_logger(), "Cmd_vel seems legit");
           controlMotors(cmd->linear.x, cmd->linear.y, cmd->angular.z);
         } else {
-          RCLCPP_WARN_STREAM(this->get_logger(), "Cmd_vel is too big");
+          //RCLCPP_WARN_STREAM(this->get_logger(), "Cmd_vel is too big");
           controlMotors(cmd->linear.x/vel_length, cmd->linear.y/vel_length, cmd->angular.z/vel_length);
         }
     }
